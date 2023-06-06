@@ -16,7 +16,7 @@ class MpodController:
 		oid = str(oid)
 		op = str(op)
 
-		args = "{}snmpwalk -Oqv{} -v 2c {} -c public {} {}".format(self.path, op, self.mib, self.ip, oid).split()
+		args = "{}snmpwalk -Oq{} -v 2c {} -c public {} {}".format(self.path, op, self.mib, self.ip, oid).split()
 
 		if(self.debug):
 			print(args)
@@ -30,7 +30,7 @@ class MpodController:
 		ch = str(ch)
 		op = str(op)
 
-		args = "{}snmpget -Oqv{} -v 2c {} -c public {} {}.{}".format(self.path, op, self.mib, self.ip, oid, ch).split()
+		args = "{}snmpget -Oq{} -v 2c {} -c public {} {}.{}".format(self.path, op, self.mib, self.ip, oid, ch).split()
 
 		if(self.debug):
 			print(args)
@@ -46,7 +46,7 @@ class MpodController:
 		val = str(val)
 		op = str(op)
 
-		args = "{}snmpset -Oqv{} -v 2c {} -c guru {} {}.{} {} {}".format(self.path, op, self.mib, self.ip, oid, ch, flg, val).split()
+		args = "{}snmpset -Oq{} -v 2c {} -c guru {} {}.{} {} {}".format(self.path, op, self.mib, self.ip, oid, ch, flg, val).split()
 
 		if(self.debug):
 			print(args)

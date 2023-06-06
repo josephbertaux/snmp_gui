@@ -25,6 +25,38 @@ class MpodChannelGui():
 	def SetVoltage(self, v):
 		self.controller.SetVoltage(ch, v)
 
+	def RefreshStatus(self, val=""):
+		if val == "":
+			self.dict["status_text"].update("Err", background_color="black")
+			return
+
+		vals = val.split()
+		if vals[0] == "04":
+			self.dict["status_text"].update("Trp", background_color="black")
+			return
+
+		if vals[0] == "00":
+			self.dict["status_text"].update("Off", background_color="red")
+			return
+
+		if vals[0] != "80":
+			self.dict["status_text"].update("Err", background_color="black")
+			return
+
+		self.dict["status_text"].update("On", background_color="green")
+		if vals[1] is None or vals[1] == "01":
+			return
+
+		if vals[1] == "09":
+			self.dict["status_text"].update("Rmp Down", background_color="orange")
+			return
+
+		if vals[1] == "11":
+			self.dict["status_text"].update("Rmp Up", background_color="orange")
+			return
+
+		self.dict["status_text"].update(val)
+
 	def __init__(self, ch, ip, alias="", path="", mib="-m +WIENER-CRATE-MIB"):
 		self.ip = str(ip)
 		self.ch = str(ch)
@@ -64,18 +96,109 @@ class MpodCrateGui():
 
 	def Refresh(self):
 		return_code, output = self.controller.Walk("outputStatus")
-		if return_code == "":
-			return
+		#if return_code == "":
+		#	return
 
-		if int(return_code) != 0:
-			print("Error: " + str(return_code))
-			return
+		#if int(return_code) != 0:
+		#	print("Error: " + str(return_code))
+		#	return
 
-		if output == "":
-			return
+		#if output == "":
+		#	return
 
-		#here
-		print(output)
+		#debug block
+		f = None
+		try:
+			f = open("snmpwalk_-Oq_.txt", "r")
+		except FileNotFoundError:
+			print("Could not open file")
+			return
+		output = f.read()
+		#~debug block
+
+		upper_params = [{"col":"black", "txt":"All Off"} for upper in self.uppers]
+		lower_params = [{"col":"green", "txt":"All On "} for lower in self.lowers]
+		output = output.split("\n")
+		for line in output:
+			if line == "":
+				continue
+			vals = parse("{}::{oid}.{ch} \"{val}\"", line)
+			if vals is None:
+				continue
+			self.dict[vals["ch"]].RefreshStatus(vals["val"])
+
+			m = int(int(parse("u{}", vals["ch"])[0]) / 100)
+			upper_params[m] = self.RefreshUpper(upper_params[m], vals["val"])
+			lower_params[m] = self.RefreshLower(lower_params[m], vals["val"])
+
+		for m in range(0, len(self.uppers)):
+			self.uppers[m].update(upper_params[m]["txt"], background_color=upper_params[m]["col"])
+		for m in range(0, len(self.lowers)):
+			self.lowers[m].update(lower_params[m]["txt"], background_color=lower_params[m]["col"])
+
+	def RefreshUpper(self, m, val=""):
+		if val == "":
+			return m
+
+		vals = val.split()
+
+		if vals[0] == "80" and (vals[1] is None or (vals[1] != "09" and vals[1] != "11")):
+			m["txt"] = "Any On "
+			m["col"] = "green"
+		if m["col"] == "green":
+			return m
+
+		if vals[0] == "80" and (vals[1] is not None and (vals[1] == "09" or vals[1] == "11")):
+			m["txt"] = "Any On "
+			m["col"] = "orange"
+		if m["col"] == "orange":
+			return m
+
+		if vals[0] == "01":
+			m["txt"] = "All Off"
+			m["col"] = "red"
+		if m["col"] == "red":
+			return m
+
+		if vals[0] == "04":
+			m["txt"] = "All Off"
+			m["col"] = "black"
+		if m["col"] == "black":
+			return m
+
+		return m
+
+	def RefreshLower(self, m, val):
+		if val == "":
+			return m
+
+		vals = val.split()
+
+		if vals[0] == "04":
+			m["txt"] = "Any Off"
+			m["col"] = "black"
+		if m["col"] == "black":
+			return m
+
+		if vals[0] == "00":
+			m["txt"] = "Any Off"
+			m["col"] = "red"
+		if m["col"] == "red":
+			return m
+
+		if vals[0] == "80" and (vals[1] is not None and (vals[1] == "09" or vals[1] == "11")):
+			m["txt"] = "All On "
+			m["col"] = "orange"
+		if m["col"] == "orange":
+			return m
+
+		if vals[0] == "80" and (vals[1] is None or (vals[1] != "09" and vals[1] != "11")):
+			m["txt"] = "All On "
+			m["col"] = "green"
+		if m["col"] == "green":
+			return m
+
+		return m
 
 	def __init__(self, ip, alias="", ch_map={}, path="", mib="-m +WIENER-CRATE-MIB"):
 		self.ip = str(ip)

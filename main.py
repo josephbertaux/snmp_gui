@@ -54,9 +54,10 @@ def GetCrateGuis(args):
 
 def main(args):
 	crate_guis = GetCrateGuis(args)
-	if len(crate_guis) == 0:
+	if crate_guis == []:
 		print("No ips specified in argument lists")
 		print("Exiting")
+		return
 
 	gui = MpodGui(crate_guis)
 	while gui.Loop():
