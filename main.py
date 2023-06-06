@@ -11,7 +11,7 @@ def GetMap(fname):
 	except FileNotFoundError:
 		print("\tCouldn't open alias file:")
 		print("\t" + fname)
-		return None
+		return ch_map
 	lines = iter(f.readlines())
 	while True:
 		try:
@@ -21,7 +21,6 @@ def GetMap(fname):
 
 		l = parse('{} {}', line)
 		ch_map[l[0]] = l[1]
-
 	return ch_map
 
 def GetCrateGuis(args):
@@ -33,33 +32,33 @@ def GetCrateGuis(args):
 		i += 1
 		if not i < len(args):
 			break
-		print(args[i])
 
 		if args[i][0:1] == "-":
-			print("\tis flag")
 			flg = args[i][1:]
 			continue
 
 		if(flg == ""):
-			print("\tis ip")
-			crate_guis += [MpodCrateGui(args[i], "", "-m +WIENER-CRATE-MIB", tmp)]
+			crate_guis += [MpodCrateGui(args[i], args[i] if "a" not in tmp else tmp["a"], {} if "f" not in tmp else tmp["f"], "", "-m +WIENER-CRATE-MIB")]
 			tmp = {}
 			continue
 
 		if(flg == "f"):
-			print("\tis file")
 			tmp["f"] = GetMap(args[i])
+
+		if(flg == "a"):
+			tmp["a"] = args[i]
 
 		flg = ""
 
 	return crate_guis
 
 def main(args):
-	print("Hello World")
-	gui = MpodGui(GetCrateGuis(args))
-	for crate_gui in gui.crate_guis:
-		print("asdf")
-		print(crate_gui.layout)
+	crate_guis = GetCrateGuis(args)
+	if len(crate_guis) == 0:
+		print("No ips specified in argument lists")
+		print("Exiting")
+
+	gui = MpodGui(crate_guis)
 	while gui.Loop():
 		continue
 

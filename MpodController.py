@@ -75,8 +75,18 @@ class MpodController:
 		# Voltage setting in V
 		self.Set("outputVoltage", ch, "F", self.default_voltage)
 
+	def TurnOn(self, ch):
+		self.Set("outputSwitch", ch, "i", "1")
+
+	def TurnOff(self, ch):
+		self.Set("outputSwitch", ch, "i", "0")
+
 	def Clear(self, ch):
 		self.Set("outputSwitch", ch, "i", "10")
+
+	def Reset(self, ch):
+		self.Clear(ch)
+		self.TurnOn(ch)
 
 	def SetVoltage(self, ch, v):
 		self.Set("outputVoltage", ch, "F", v)
@@ -84,8 +94,8 @@ class MpodController:
 class MpodCrateController(MpodController):
 	def __init__(self, ip, path="", mib="-m +WIENER-CRATE-MIB"):
 		super().__init__(ip, path, mib)
-		self.num_channels = 3 # channels per module
-		self.num_modules = 2 # number of modules
+		self.num_channels = 16 # channels per module
+		self.num_modules = 8 # number of modules
 		self.channels = [["u{:d}".format(m * 100 + ch) for ch in range(0, self.num_channels)] for m in range(0, self.num_modules)]
 
 	def Init(self):

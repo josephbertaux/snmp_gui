@@ -1,0 +1,1 @@
+py main.py -f foo.txt -a foo ip_of_foo -f bar.txt -a bar ip_of_bar
