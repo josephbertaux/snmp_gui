@@ -20,7 +20,7 @@ class MpodController:
 
 		if(self.debug):
 			print(args)
-			return None
+			return "", ""
 		else:
 			cp = sp.run(args, capture_outpue=True, encoding='utf-8')
 			return cp.returncode, cp.stdout if cp.returncode == 0 else cp.stderr
@@ -34,7 +34,7 @@ class MpodController:
 
 		if(self.debug):
 			print(args)
-			return None
+			return "", ""
 		else:
 			cp = sp.run(args, capture_outpue=True, encoding='utf-8')
 			return cp.returncode, cp.stdout if cp.returncode == 0 else cp.stderr
@@ -50,7 +50,7 @@ class MpodController:
 
 		if(self.debug):
 			print(args)
-			return None
+			return "", ""
 		else:
 			cp = sp.run(args, capture_outpue=True, encoding='utf-8')
 			return cp.returncode, cp.stdout if cp.returncode == 0 else cp.stderr
@@ -105,16 +105,16 @@ class MpodCrateController(MpodController):
 			for ch in m:
 				super().Init(ch)
 
-	def AllOn(self):
+	def CrateOn(self):
 		self.Set("groupsSwitch", "64", "i", "1")
 
-	def AllOff(self):
+	def CrateOff(self):
 		self.Set("groupsSwitch", "64", "i", "0")
 
-	def AllClear(self):
+	def CrateClear(self):
 		self.Set("groupsSwitch", "64", "i", "10")
 
-	def AllVoltage(self, v):
+	def CrateVoltage(self, v):
 		for m in self.channels:
 			for ch in m:
 				self.Set("outputVoltage", ch, "F", v)

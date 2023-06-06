@@ -1,5 +1,6 @@
-from parse import parse
 import threading
+import time
+from parse import parse
 import PySimpleGUI as sg
 
 from MpodController import *
@@ -40,14 +41,17 @@ class MpodChannelGui():
 		#self.layout = [val for key, val in self.dict.items()]
 
 class MpodCrateGui():
-	def AllOn(self):
-		self.controller.AllOn()
+	def CrateOn(self):
+		self.controller.CrateOn()
 
-	def AllOff(self):
-		self.controller.AllOff()
+	def CrateOff(self):
+		self.controller.CrateOff()
 
-	def AllClear(self):
-		self.controller.AllClear()
+	def CrateClear(self):
+		self.controller.CrateClear()
+
+	def CrateInit(self):
+		self.controller.Init()
 
 	def ModuleOn(self, m):
 		return lambda: self.controller.ModuleOn(m)
@@ -57,6 +61,21 @@ class MpodCrateGui():
 
 	def ModuleClear(self, m):
 		return lambda: self.controller.ModuleClear(m)
+
+	def Refresh(self):
+		return_code, output = self.controller.Walk("outputStatus")
+		if return_code == "":
+			return
+
+		if int(return_code) != 0:
+			print("Error: " + str(return_code))
+			return
+
+		if output == "":
+			return
+
+		#here
+		print(output)
 
 	def __init__(self, ip, alias="", ch_map={}, path="", mib="-m +WIENER-CRATE-MIB"):
 		self.ip = str(ip)
@@ -72,9 +91,10 @@ class MpodCrateGui():
 		self.uppers = []
 		self.lowers = []
 		self.layout = []
-		self.layout += [sg.Button("All On", key=lambda: self.AllOn())]
-		self.layout += [sg.Button("All Off", key=lambda: self.AllOff())]
-		self.layout += [sg.Button("All Clear", key=lambda: self.AllClear())]
+		self.layout += [sg.Button("Crate On", key=lambda: self.CrateOn())]
+		self.layout += [sg.Button("Crate Off", key=lambda: self.CrateOff())]
+		self.layout += [sg.Button("Crate Clear", key=lambda: self.CrateClear())]
+		self.layout += [sg.Button("Crate Init", key=lambda: self.CrateInit())]
 		self.layout = [self.layout]
 		for m in self.controller.channels:
 			s = int(int(parse("u{}", m[0])[0]) / 100)
@@ -100,11 +120,61 @@ class MpodCrateGui():
 		self.layout += [[sg.TabGroup([[val for key, val in self.tabs.items()]])]]
 
 class MpodGui():
+	def AllOn(self):
+		for crate_gui in self.crate_guis:
+			self.window.perform_long_operation(crate_gui.CrateOff, "Event")
+
+	def AllOff(self):
+		for crate_gui in self.crate_guis:
+			self.window.perform_long_operation(crate_gui.CrateOff, "Event")
+
+	def AllClear(self):
+		for crate_gui in self.crate_guis:
+			self.window.perform_long_operation(crate_gui.CrateClear, "Event")
+
+	def AllInit(self):
+		thrs = []
+		for crate_gui in self.crate_guis:
+			thrs += [threading.Thread(target=crate_gui.CrateInit)]
+		for thr in thrs:
+			thr.start()
+		for thr in thrs:
+			thr.join()
+		print("Init done")
+
+	def Refresh(self):
+		t = time.time()
+		thrs = []
+		for crate_gui in self.crate_guis:
+			thrs += [threading.Thread(target=crate_gui.Refresh)]
+		for thr in thrs:
+			thr.start()
+		for thr in thrs:
+			thr.join()
+		t = self.refresh_wait - (time.time() - t)
+		if(t > 0):
+			time.sleep(t)
+
+	def CallRefresh(self):
+		self.window.perform_long_operation(self.Refresh, self.update_id)
+
 	def __init__(self, crate_guis):
+		self.update_id = "Update"
+		self.refresh_wait = 15
+
+		self.layout = []
+		self.layout += [sg.Button("All On", key=lambda: self.AllOn())]
+		self.layout += [sg.Button("All Off", key=lambda: self.AllOff())]
+		self.layout += [sg.Button("All Clear", key=lambda: self.AllClear())]
+		self.layout += [sg.Button("All Init", key=lambda: self.AllInit())]
+		self.layout = [self.layout]
+
 		self.crate_guis = crate_guis
-		self.layout = [[sg.Frame(crate_gui.alias, crate_gui.layout) for crate_gui in self.crate_guis]]
+		self.layout += [[sg.Frame(crate_gui.alias, crate_gui.layout) for crate_gui in self.crate_guis]]
+
 		self.window = sg.Window("Mpod Control Gui", [[sg.Column(self.layout, scrollable=True, expand_x=True, expand_y=True)]], resizable=True, finalize=True)
 		self.window.bind("<Configure>", "Configure")
+		self.CallRefresh()
 
 	def Loop(self):
 		event, values = self.window.read()
@@ -118,5 +188,8 @@ class MpodGui():
 
 		if callable(event):
 			self.window.perform_long_operation(event, "Event")
+
+		if event == self.update_id:
+			self.CallRefresh()
 
 		return True
