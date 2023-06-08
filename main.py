@@ -6,12 +6,14 @@ def GetMap(fname):
 	f = None
 	line = ""
 	ch_map = {}
+
 	try:
 		f = open(fname, 'r')
 	except FileNotFoundError:
 		print("\tCouldn't open alias file:")
 		print("\t" + fname)
 		return ch_map
+
 	lines = iter(f.readlines())
 	while True:
 		try:
@@ -19,8 +21,9 @@ def GetMap(fname):
 		except StopIteration:
 			break
 
-		l = parse('{} {}', line)
+		l = parse("{} {}\n", line)
 		ch_map[l[0]] = l[1]
+
 	return ch_map
 
 def GetCrateGuis(args):

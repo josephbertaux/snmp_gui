@@ -62,7 +62,7 @@ class MpodChannelGui():
 		self.ch = str(ch)
 		self.controller = MpodController(ip, path, mib)
 		self.dict = {}
-		self.dict["label_text"] = sg.Text("{:^8}".format(ch if alias == "" else alias), size=(8,1))
+		self.dict["label_text"] = sg.Text("{:<12}".format(ch if alias == "" else alias), size=(12,1))
 		self.dict["status_text"] = sg.Text("", size=(9,1))
 		self.dict["on_button"] = sg.Button(" On", size=(3,1), key=lambda: self.TurnOn())
 		self.dict["off_button"] = sg.Button("Off", size=(3,1), key=lambda: self.TurnOff())
@@ -132,9 +132,9 @@ class MpodCrateGui():
 			lower_params[m] = self.RefreshLower(lower_params[m], vals["val"])
 
 		for m in range(0, len(self.uppers)):
-			self.uppers[m].update(upper_params[m]["txt"], background_color=upper_params[m]["col"])
+			self.uppers[m].update(upper_params[m]["txt"].center(self.indicator_width), background_color=upper_params[m]["col"])
 		for m in range(0, len(self.lowers)):
-			self.lowers[m].update(lower_params[m]["txt"], background_color=lower_params[m]["col"])
+			self.lowers[m].update(lower_params[m]["txt"].center(self.indicator_width), background_color=lower_params[m]["col"])
 
 	def RefreshUpper(self, m, val=""):
 		if val == "":
@@ -205,8 +205,8 @@ class MpodCrateGui():
 		self.controller = MpodCrateController(ip, path, mib)
 		self.alias = alias if alias != "" else self.ip
 		self.ch_map = ch_map
-		self.indicator_width = 6
-		self.tab_width = self.indicator_width + 4
+		self.tab_width = 8
+		self.indicator_width = 9
 		self.refresh_wait = 15
 
 		self.dict = {}
@@ -282,6 +282,8 @@ class MpodGui():
 		self.window.perform_long_operation(self.Refresh, self.update_id)
 
 	def __init__(self, crate_guis):
+		sg.set_options(font=('Noto Mono', 10))
+
 		self.update_id = "Update"
 		self.refresh_wait = 15
 

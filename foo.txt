@@ -1,3 +1,5 @@
+0 RC-0S
+1 RC-1S
 u0 zero
 u1 one
 u2 two
